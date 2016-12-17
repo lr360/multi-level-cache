@@ -655,9 +655,12 @@ tests.forEach(function(test){
         });
       });
 
-      it('should evict from cache based on the default TTL', function (done) {
+      it('should evict from cache based on the default local and remote TTL', function (done) {
         this.timeout(3000);
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, {'ttl': 1});
+        var multiCache = new MultiCache(localCacheName, remoteCacheName, {
+          localOptions: {ttl: 1},
+          remoteOptions: {ttl: 1}
+        });
         multiCache.set(key, 'myValue', function (err, result) {
           assert(!err);
           assert(!_.isEmpty(result));

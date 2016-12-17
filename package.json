@@ -1,6 +1,6 @@
 {
   "name": "multi-level-cache",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "Manage local and remote caches with a single API",
   "main": "index.js",
   "public": true,
@@ -22,8 +22,7 @@
     "lint",
     "pre-commit-stash-save",
     "coverage",
-    "post-commit-stash-pop",
-    "check-coverage"
+    "post-commit-stash-pop"
   ],
   "repository": {
     "type": "git",
