@@ -1,14 +1,14 @@
 'use strict';
 
-var nodeCache = require('../../lib/cache-lib/node-cache');
-var MultiCache = require('../..');
-var assert = require('assert');
-var _ = require('lodash');
-var sinon = require('sinon');
-var redis = require('redis');
-var async = require('async');
+const nodeCache = require('../../lib/cache-lib/node-cache');
+const MultiCache = require('../..');
+const assert = require('assert');
+const _ = require('lodash');
+const sinon = require('sinon');
+const redis = require('redis');
+const async = require('async');
 
-var integration = [
+const integration = [
   ['node-cache', 'node-cache'],
   ['node-cache', 'redis'],
   ['redis', 'node-cache']
@@ -16,11 +16,11 @@ var integration = [
   // we're reading/writing from/to the same "namespace"
 ];
 
-var unit = [['node-cache', 'node-cache']];
+const unit = [['node-cache', 'node-cache']];
 
-var isIntegrationTest = process.env.NODE_MULTICACHE_TESTTYPE === 'integration';
+const isIntegrationTest = process.env.NODE_MULTICACHE_TESTTYPE === 'integration';
 
-var tests = isIntegrationTest ? integration : unit;
+const tests = isIntegrationTest ? integration : unit;
 
 // Some notes about why mockRedis() is needed
 // The Redis client library will raise error events if it detects that redis is not
@@ -30,7 +30,7 @@ var tests = isIntegrationTest ? integration : unit;
 // We only want to do a full integration test when isIntegrationTest is true
 function mockRedis() {
   if(!isIntegrationTest) {
-    var connectionGoneStub, onErrorStub;
+    let connectionGoneStub, onErrorStub;
     before(function () {
       connectionGoneStub = sinon.stub(redis.RedisClient.prototype, 'connection_gone', function () {
         // do nothing
@@ -47,12 +47,12 @@ function mockRedis() {
 }
 
 tests.forEach(function(test){
-  var key = 'myKey';
-  var localCacheName = test[0],
+  let key = 'myKey';
+  let localCacheName = test[0],
     remoteCacheName = test[1];
   describe('Multi Cache', function(){ // eslint-disable-line max-statements
     mockRedis();
-    var testRemoteOnly,
+    let testRemoteOnly,
         testLocalOnly,
         testBothActive,
         testBothInactive;
@@ -78,7 +78,34 @@ tests.forEach(function(test){
     describe('Class creation', function() {
 
       it('should create a Multi-Cache without options', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
+        assert.notEqual(multiCache.localCache, multiCache.remoteCache);
+        assert(multiCache.useLocalCacheDefault);
+        assert(multiCache.useRemoteCacheDefault);
+        // TODO: Add sinon to confirm that the createCache function is called.
+        multiCache.set(key, 'myValue', function (err, result) {
+          assert(!err);
+          assert(result);
+          multiCache.get(key, function (err, value) {
+            assert(!err);
+            assert.equal(value, 'myValue');
+            // Test that key/value is in remoteCache as well because if
+            // we create the Multi Cache without options then both remote
+            // and local are switched on by default.
+            multiCache.get(key, testRemoteOnly, function (err, value) {
+              assert(!err);
+              assert.equal(value, 'myValue');
+              done();
+            });
+          });
+        });
+      });
+
+      it('should create a Multi-Cache with empty options', function (done) {
+        let multiCache = new MultiCache(localCacheName, remoteCacheName, {
+          localOptions: {},
+          remoteOptions: {}
+        });
         assert.notEqual(multiCache.localCache, multiCache.remoteCache);
         assert(multiCache.useLocalCacheDefault);
         assert(multiCache.useRemoteCacheDefault);
@@ -104,10 +131,10 @@ tests.forEach(function(test){
       it('should create a Multi-Cache with pre-created caches', function (done) {
         // Pass in pre-created cache objects to create a Multi-Cache instead of
         // names for the cache objects.
-        var localCache = nodeCache();
-        var remoteCache = nodeCache();
+        let localCache = nodeCache();
+        let remoteCache = nodeCache();
 
-        var multiCache = new MultiCache(localCache, remoteCache, testLocalOnly);
+        let multiCache = new MultiCache(localCache, remoteCache, testLocalOnly);
         // TODO: Add sinon to confirm that the createCache function is NOT called.
         multiCache.set(key, 'myValue', function (err, result) {
           assert(!err);
@@ -130,7 +157,7 @@ tests.forEach(function(test){
 
     describe('Setting', function() {
       beforeEach(function(done){
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         multiCache.del(key, function(err){
           assert(!err);
           done();
@@ -138,7 +165,7 @@ tests.forEach(function(test){
       });
 
       it('should set an object in the local cache only', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, testLocalOnly);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName, testLocalOnly);
         assert.notEqual(multiCache.localCache, multiCache.remoteCache);
         multiCache.set(key, 'myValue', function (err, result) {
           assert(!err);
@@ -158,7 +185,7 @@ tests.forEach(function(test){
       });
 
       it('should set an object in the remote cache only', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, testRemoteOnly);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName, testRemoteOnly);
         assert.notEqual(multiCache.localCache, multiCache.remoteCache);
         multiCache.set(key, 'myValue', function (err, result) {
           assert(!err);
@@ -178,7 +205,7 @@ tests.forEach(function(test){
       });
 
       it('should set an object in both remote and local caches', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, testBothActive);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName, testBothActive);
         assert.notEqual(multiCache.localCache, multiCache.remoteCache);
         multiCache.set(key, 'myValue', function (err, result) {
           assert(!err);
@@ -197,7 +224,7 @@ tests.forEach(function(test){
       });
 
       it('should return an error for neither caches during set', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, testBothInactive);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName, testBothInactive);
         assert.notEqual(multiCache.localCache, multiCache.remoteCache);
         multiCache.set(key, 'myValue', function (err, result) {
           assert(err);
@@ -208,7 +235,7 @@ tests.forEach(function(test){
       });
 
       it('should return an error for neither caches during get', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, testBothActive);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName, testBothActive);
         assert.notEqual(multiCache.localCache, multiCache.remoteCache);
         multiCache.set(key, 'myValue', function (err, result) {
           assert(!err);
@@ -226,7 +253,7 @@ tests.forEach(function(test){
 
     describe('Getting', function() {
       beforeEach(function(done){
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         multiCache.del(key, function(err){
           assert(!err);
           done();
@@ -234,7 +261,7 @@ tests.forEach(function(test){
       });
 
       it('should get an object from the remote cache if local is empty', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         multiCache.set(key, 'myValue', testRemoteOnly, function (err, result) {
           assert(!err);
           assert(!_.isEmpty(result));
@@ -253,7 +280,7 @@ tests.forEach(function(test){
       });
 
       it('should set an object in local cache if setLocal is true', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         multiCache.set(key, 'myValue', testRemoteOnly, function (err, result) {
           assert(!err);
           assert(!_.isEmpty(result));
@@ -271,8 +298,8 @@ tests.forEach(function(test){
       });
 
       it('should handle the local cache returning an error on get', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, testBothActive);
-        var localStub = sinon.stub(multiCache.localCache, 'get', function(keys, callback){
+        let multiCache = new MultiCache(localCacheName, remoteCacheName, testBothActive);
+        let localStub = sinon.stub(multiCache.localCache, 'get', function(keys, callback){
           return callback('fake error', 'fake value');
         });
         multiCache.set(key, 'myValue', function (err, result) {
@@ -288,8 +315,8 @@ tests.forEach(function(test){
       });
 
       it('should handle the remote cache returning an error on get', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, testBothActive);
-        var remoteStub = sinon.stub(multiCache.remoteCache, 'get', function(keys, callback){
+        let multiCache = new MultiCache(localCacheName, remoteCacheName, testBothActive);
+        let remoteStub = sinon.stub(multiCache.remoteCache, 'get', function(keys, callback){
           return callback('fake error', 'fake value');
         });
         multiCache.set(key, 'myValue', testRemoteOnly, function (err, result) {
@@ -309,7 +336,7 @@ tests.forEach(function(test){
     describe('Deleting', function() {
 
       it('should delete an object in the local cache only', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         // Set a key/value in both local and remote caches
         // Set remoteCache to true to override the default from above
         multiCache.set(key, 'myValue', function (err, result) {
@@ -334,7 +361,7 @@ tests.forEach(function(test){
       });
 
       it('should delete an object in the remote cache only', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         // Set a key/value in both local and remote caches
         // Set remoteCache to true to override the default from above
         multiCache.set(key, 'myValue', function (err, result) {
@@ -359,7 +386,7 @@ tests.forEach(function(test){
       });
 
       it('should delete an object in both remote and local caches', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         // Set a key/value in both local and remote caches
         // Set remoteCache to true to override the default from above
         multiCache.set(key, 'myValue', function (err, result) {
@@ -384,7 +411,7 @@ tests.forEach(function(test){
       });
 
       it('should not delete an object in either remote and local caches', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         // Set a key/value in both local and remote caches
         // Set remoteCache to true to override the default from above
         multiCache.set(key, 'myValue', function (err, result) {
@@ -411,8 +438,8 @@ tests.forEach(function(test){
     describe('Complex objects', function() {
 
       it('should set and get complex objects', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
-        var value = {
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let value = {
           nested: {
             obj: {
               which: {
@@ -518,7 +545,7 @@ tests.forEach(function(test){
       }
 
       it('should flush all key/values from the cache', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         setBothAndConfirm(multiCache, key, 'myValue', function(){
           setBothAndConfirm(multiCache, 'myKey2', 'myValue2', function(){
             multiCache.flushAll(function(err){
@@ -551,7 +578,7 @@ tests.forEach(function(test){
       }
 
       it('should flush all key/values from the local cache only', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         setBothAndConfirm(multiCache, key, 'myValue', function(){
           setBothAndConfirm(multiCache, 'myKey2', 'myValue2', function(){
             multiCache.flushAll(testLocalOnly, function(err){
@@ -567,7 +594,7 @@ tests.forEach(function(test){
       });
 
       it('should flush all key/values from the remote cache only', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         setBothAndConfirm(multiCache, key, 'myValue', function(){
           setBothAndConfirm(multiCache, 'myKey2', 'myValue2', function(){
             multiCache.flushAll(testRemoteOnly, function(err){
@@ -585,81 +612,11 @@ tests.forEach(function(test){
     });
 
     describe('Cache Expiration', function(){
-      it('should evict from cache based on TTL', function (done) {
-        this.timeout(3000);
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
-        var ttl = 1; // seconds
-        multiCache.set(key, 'myValue', ttl, function (err, result) {
-          assert(!err);
-          assert(!_.isEmpty(result));
-          // Check that key is in both local and remote cache
-          multiCache.get(key, testLocalOnly, function (err, value) {
-            assert(!err);
-            assert(!_.isEmpty(value));
-            assert.equal(value, 'myValue');
-            multiCache.get(key, testRemoteOnly, function (err, value) {
-              assert(!err);
-              assert(!_.isEmpty(value));
-              assert.equal(value, 'myValue');
-              // Test that key/value is evicted after 3 seconds
-              setTimeout(function () {
-                multiCache.get(key, testLocalOnly, function (err, value) {
-                  assert(err);
-                  assert(err.keyNotFound);
-                  assert.equal(undefined, value);
-                  multiCache.get(key, testRemoteOnly, function (err, value) {
-                    assert(err);
-                    assert(err.keyNotFound);
-                    assert.equal(undefined, value);
-                    done();
-                  });
-                });
-              }, 2000);
-            });
-          });
-        });
-      });
-
-      it('should evict from cache based on TTL, ignoring default TTL', function (done) {
-        this.timeout(3000);
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, {'ttl': 15});
-        var ttl = 1; // seconds
-        multiCache.set(key, 'myValue', ttl, function (err, result) {
-          assert(!err);
-          assert(!_.isEmpty(result));
-          // Check that key is in both local and remote cache
-          multiCache.get(key, testLocalOnly, function (err, value) {
-            assert(!err);
-            assert(!_.isEmpty(value));
-            assert.equal(value, 'myValue');
-            multiCache.get(key, testRemoteOnly, function (err, value) {
-              assert(!err);
-              assert(!_.isEmpty(value));
-              assert.equal(value, 'myValue');
-              // Test that key/value is evicted after 3 seconds
-              setTimeout(function () {
-                multiCache.get(key, testLocalOnly, function (err, value) {
-                  assert(err);
-                  assert(err.keyNotFound);
-                  assert.equal(undefined, value);
-                  multiCache.get(key, testRemoteOnly, function (err, value) {
-                    assert(err);
-                    assert(err.keyNotFound);
-                    assert.equal(undefined, value);
-                    done();
-                  });
-                });
-              }, 2000);
-            });
-          });
-        });
-      });
-
       it('should evict from cache based on the default local and remote TTL', function (done) {
-        this.timeout(3000);
-        var multiCache = new MultiCache(localCacheName, remoteCacheName, {
-          localOptions: {ttl: 1},
-          remoteOptions: {ttl: 1}
+        this.timeout(4000);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName, {
+          localOptions: {ttl_min: 1, ttl_max: 2},
+          remoteOptions: {ttl: 1, ttl_min: 1, ttl_max: 2}
         });
         multiCache.set(key, 'myValue', function (err, result) {
           assert(!err);
@@ -686,7 +643,7 @@ tests.forEach(function(test){
                     done();
                   });
                 });
-              }, 2000);
+              }, 3000);
             });
           });
         });
@@ -695,13 +652,13 @@ tests.forEach(function(test){
 
     describe('Stats', function(){
       beforeEach(function(done){
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
         multiCache.flushAll(done);
       });
 
       it('should set keys in caches and get stats', function (done) {
-        var multiCache = new MultiCache(localCacheName, remoteCacheName);
-        var keyValues = [
+        let multiCache = new MultiCache(localCacheName, remoteCacheName);
+        let keyValues = [
           { key: 'key1', value: 'value1'},
           { key: 'key2', value: 'value2'},
           { key: 'key3', value: 'value3'}

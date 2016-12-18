@@ -10,9 +10,9 @@ var redis = require('redis');
 var redisAdapter = require('../../../lib/cache-lib/redis');
 
 /* eslint-disable max-statements */
-describe('redis adapter', function(){
+describe('redis adapter', function () {
 
-  it('should call callback if redis returns an error in get', function(done) {
+  it('should call callback if redis returns an error in get', function (done) {
 
     var redisStub = sinon.stub(redis, 'createClient', function () {
       return {
@@ -34,12 +34,22 @@ describe('redis adapter', function(){
     });
   });
 
-  it('should call callback if redis returns an error in set', function(done) {
+  it('should call callback if redis returns an error in set', function (done) {
 
     var redisStub = sinon.stub(redis, 'createClient', function () {
       return {
-        set: function (key, value, callback) {
-          return callback('fake error');
+        multi: function () {
+          return {
+            set: function () {
+              return this;
+            },
+            expire: function () {
+              return this;
+            },
+            exec: function (callback) {
+              callback('fake error');
+            }
+          };
         }
       };
     });
@@ -56,55 +66,49 @@ describe('redis adapter', function(){
     });
   });
 
-  it('should call set a key with no TTL', function(done){
+  it('should call set a key with no TTL', function (done) {
     var clientStub = {
-      'set': sinon.stub().callsArg(2),
+      multi: function () {
+        return {
+          set: function () {
+            return this;
+          },
+          expire: function () {
+            return this;
+          },
+          exec: function (callback) {
+            callback(null, [true, false]);
+          }
+        };
+      },
       on: _.noop
     };
-    var redisStub = sinon.stub(redis, 'createClient', function(){
+    var redisStub = sinon.stub(redis, 'createClient', function () {
       return clientStub;
     });
 
     var redisPlugin = redisAdapter({});
-    redisPlugin.set('testkey', 'testvalue', function(){
-      assert.equal(clientStub.set.callCount, 1);
+    redisPlugin.set('testkey', 'testvalue', function (err, value) {
+      assert.equal(err, null);
+      assert.equal(value, true);
       redisStub.restore();
       done();
     });
   });
 
-  it('should call set a key with a TTL', function(done){
-    var clientStub = {
-      'set': sinon.stub().callsArg(2),
-      'expire': sinon.stub().callsArg(2),
-      on: _.noop
-    };
-    var redisStub = sinon.stub(redis, 'createClient', function() {
-      return clientStub;
-    });
-
-    var redisPlugin = redisAdapter({});
-    redisPlugin.set('testkey', 'testvalue', 15, function(){
-      assert.equal(clientStub.set.callCount, 1);
-      assert.equal(clientStub.expire.callCount, 1);
-      redisStub.restore();
-      done();
-    });
-  });
-
-  it('should call get a valid key', function(done){
+  it('should call get a valid key', function (done) {
     var clientStub = {
       // the value returned from redis is pure JSON, needs to be literal here
       // increasing testing here to include parser revive function
       'get': sinon.stub().callsArgWith(1, null, '{"a":"2015-04-21T04:58:20.648Z","b":"something"}'),
       on: _.noop
     };
-    var redisStub = sinon.stub(redis, 'createClient', function() {
+    var redisStub = sinon.stub(redis, 'createClient', function () {
       return clientStub;
     });
 
     var redisPlugin = redisAdapter({});
-    redisPlugin.get('testkey', function(){
+    redisPlugin.get('testkey', function () {
       assert.equal(clientStub.get.callCount, 1);
       redisStub.restore();
       done();
@@ -112,17 +116,17 @@ describe('redis adapter', function(){
 
   });
 
-  it('should callback with KeyNotFoundError if there is no key', function(done){
+  it('should callback with KeyNotFoundError if there is no key', function (done) {
     var clientStub = {
       'get': sinon.stub().callsArgWith(1, null, null),
       on: _.noop
     };
-    var redisStub = sinon.stub(redis, 'createClient', function() {
+    var redisStub = sinon.stub(redis, 'createClient', function () {
       return clientStub;
     });
 
     var redisPlugin = redisAdapter({});
-    redisPlugin.get('this key is not in the cache', function(err, result){
+    redisPlugin.get('this key is not in the cache', function (err, result) {
       assert(err);
       assert.equal('MultiError', err.name);
       assert.equal(true, err.keyNotFound);
@@ -134,45 +138,45 @@ describe('redis adapter', function(){
     });
   });
 
-  it('should call delete a key', function(done){
+  it('should call delete a key', function (done) {
     var clientStub = {
       'del': sinon.stub().callsArg(1),
       on: _.noop
     };
-    var redisStub = sinon.stub(redis, 'createClient', function() {
+    var redisStub = sinon.stub(redis, 'createClient', function () {
       return clientStub;
     });
 
     var redisPlugin = redisAdapter({});
-    redisPlugin.del('testkey', function(){
+    redisPlugin.del('testkey', function () {
       assert.equal(clientStub.del.callCount, 1);
       redisStub.restore();
       done();
     });
   });
 
-  it('should call flushAll', function(done){
+  it('should call flushAll', function (done) {
     var clientStub = {
-      'flushall': function(callback) {
+      'flushall': function (callback) {
         callback();
       },
       on: _.noop
     };
-    var redisStub = sinon.stub(redis, 'createClient', function() {
+    var redisStub = sinon.stub(redis, 'createClient', function () {
       return clientStub;
     });
 
     var redisPlugin = redisAdapter({});
-    redisPlugin.flushAll(function(err){
+    redisPlugin.flushAll(function (err) {
       assert(!err);
       redisStub.restore();
       done();
     });
   });
 
-  it('should call stats', function(done){
+  it('should call stats', function (done) {
     var clientStub = {
-      'keys': function(pattern, callback) {
+      'keys': function (pattern, callback) {
         callback(null, [1, 2, 3]);
       },
       server_info: {
@@ -180,12 +184,12 @@ describe('redis adapter', function(){
       },
       on: _.noop
     };
-    var redisStub = sinon.stub(redis, 'createClient', function() {
+    var redisStub = sinon.stub(redis, 'createClient', function () {
       return clientStub;
     });
 
     var redisPlugin = redisAdapter({});
-    redisPlugin.stats(function(err, stats){
+    redisPlugin.stats(function (err, stats) {
       assert(!err);
       assert(stats);
       assert.equal(stats.name, 'redis');
@@ -196,19 +200,19 @@ describe('redis adapter', function(){
     });
   });
 
-  it('should handle error in stats', function(done){
+  it('should handle error in stats', function (done) {
     var clientStub = {
-      'keys': function(pattern, callback) {
+      'keys': function (pattern, callback) {
         callback(new Error('fake error'));
       },
       on: _.noop
     };
-    var redisStub = sinon.stub(redis, 'createClient', function() {
+    var redisStub = sinon.stub(redis, 'createClient', function () {
       return clientStub;
     });
 
     var redisPlugin = redisAdapter({});
-    redisPlugin.stats(function(err, stats){
+    redisPlugin.stats(function (err, stats) {
       assert(err);
       assert(!stats);
       redisStub.restore();
@@ -223,14 +227,14 @@ describe('redis adapter', function(){
       // increasing testing here to include parser revive function
       'get': sinon.stub().callsArgWith(1, null,
         '{"a":"{foo:2015-04-21T04:58:20.648Z}","b":"something"}'),
-        on: _.noop
+      on: _.noop
     };
-    var redisStub = sinon.stub(redis, 'createClient', function() {
+    var redisStub = sinon.stub(redis, 'createClient', function () {
       return clientStub;
     });
 
     var redisPlugin = redisAdapter({});
-    redisPlugin.get('testkey', function(error, cachedValue){
+    redisPlugin.get('testkey', function (error, cachedValue) {
       // Check for Invalid Date (not a date or not Invalid Date)
       assert(!cachedValue.a.getTime || !isNaN(cachedValue.a.getTime()));
       assert.equal(typeof cachedValue.a, 'string');
@@ -240,7 +244,7 @@ describe('redis adapter', function(){
     });
   });
 
-  describe('Redis adapter options passing', function(){
+  describe('Redis adapter options passing', function () {
     it('should use default options if no options set', function () {
       var redisStub = sinon.stub(redis, 'createClient').returns({});
 
@@ -279,13 +283,13 @@ describe('redis adapter', function(){
   });
 
 
-  describe('Redis error recovery', function(){
-    it('should recover when redis recovers', function(done) {
+  describe('Redis error recovery', function () {
+    it('should recover when redis recovers', function (done) {
       var errMsg = 'fake error from event';
       var redisPlugin, redisStub;
-      var testGetValue = {x: 'myTestValue'};
+      var testGetValue = { x: 'myTestValue' };
       var clientEventEmitter = new EventEmitter();
-      clientEventEmitter.get = function(key, callback) {
+      clientEventEmitter.get = function (key, callback) {
         return callback(null, JSON.stringify(testGetValue));
       };
       redisStub = sinon.stub(redis, 'createClient', function () {
@@ -311,10 +315,10 @@ describe('redis adapter', function(){
     });
   });
 
-  describe('Redis error state', function(){
+  describe('Redis error state', function () {
     var errMsg = 'fake error from event';
     var redisPlugin, redisStub;
-    beforeEach(function(done){
+    beforeEach(function (done) {
       var clientEventEmitter = new EventEmitter();
       redisStub = sinon.stub(redis, 'createClient', function () {
         return clientEventEmitter;
@@ -323,12 +327,12 @@ describe('redis adapter', function(){
       clientEventEmitter.emit('error', errMsg);
       done();
     });
-    afterEach(function(done){
+    afterEach(function (done) {
       redisStub.restore();
       done();
     });
 
-    it('should callback in error state when calling get', function(done) {
+    it('should callback in error state when calling get', function (done) {
       redisPlugin.get('testkey', function (err, value) {
         assert(err);
         assert.equal(err.message, errMsg);
@@ -337,7 +341,7 @@ describe('redis adapter', function(){
       });
     });
 
-    it('should callback in error state when calling set', function(done) {
+    it('should callback in error state when calling set', function (done) {
       redisPlugin.set('testkey', 'testvalue', function (err, value) {
         assert(err);
         assert.equal(err.message, errMsg);
@@ -346,7 +350,7 @@ describe('redis adapter', function(){
       });
     });
 
-    it('should callback in error state when calling del', function(done) {
+    it('should callback in error state when calling del', function (done) {
       redisPlugin.del('testkey', function (err) {
         assert(err);
         assert.equal(err.message, errMsg);
@@ -354,7 +358,7 @@ describe('redis adapter', function(){
       });
     });
 
-    it('should callback in error state when calling flushall', function(done) {
+    it('should callback in error state when calling flushall', function (done) {
       redisPlugin.flushAll(function (err) {
         assert(err);
         assert.equal(err.message, errMsg);
@@ -362,7 +366,7 @@ describe('redis adapter', function(){
       });
     });
 
-    it('should callback in error state when calling stats', function(done) {
+    it('should callback in error state when calling stats', function (done) {
       redisPlugin.stats(function (err) {
         assert(err);
         assert.equal(err.message, errMsg);

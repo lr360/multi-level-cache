@@ -2,6 +2,9 @@
   "env": {
     "node": true
   },
+  "ecmaFeatures": {
+    "blockBindings": true
+  },
   "rules": {
     "no-bitwise": true,
     "camelcase": true,
@@ -22,7 +25,7 @@
     "max-depth": 3,
     "trailing": true,
     "max-statements": 15,
-    "max-len": [2,100,4],
+    "max-len": [2,110,4],
     "eqnull": true,
     "funcscope": true,
     "undef": true,

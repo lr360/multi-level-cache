@@ -12,12 +12,18 @@
     "test": "node_modules/.bin/mocha --recursive",
     "posttest": "node_modules/.bin/eslint .",
     "lint": "node_modules/.bin/eslint .",
-    "check-coverage": "node_modules/.bin/istanbul check-coverage --statements 100 --branches 100 --functions 100 --lines 100 ./coverage/coverage.json",
+    "check-coverage": "node_modules/.bin/istanbul check-coverage --statements 98 --branches 98 --functions 98 --lines 98 ./coverage/coverage.json",
     "coverage": "node_modules/.bin/istanbul cover ./node_modules/mocha/bin/_mocha -- --recursive",
     "pre-commit-stash-save": "git stash --keep-index",
     "post-commit-stash-pop": "git stash pop"
   },
-  "pre-commit": [],
+  "pre-commit": [
+    "pre-commit-update",
+    "lint",
+    "pre-commit-stash-save",
+    "coverage",
+    "post-commit-stash-pop"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/guyellis/multi-level-cache.git"
