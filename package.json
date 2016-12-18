@@ -1,6 +1,6 @@
 {
   "name": "multi-level-cache",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Manage local and remote caches with a single API",
   "main": "index.js",
   "public": true,
