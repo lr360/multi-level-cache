@@ -18,11 +18,6 @@
     "post-commit-stash-pop": "git stash pop"
   },
   "pre-commit": [
-    "pre-commit-update",
-    "lint",
-    "pre-commit-stash-save",
-    "coverage",
-    "post-commit-stash-pop"
   ],
   "repository": {
     "type": "git",
