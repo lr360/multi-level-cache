@@ -1,6 +1,6 @@
 {
   "name": "multi-level-cache",
-  "version": "0.0.15",
+  "version": "0.1.0",
   "description": "Manage local and remote caches with a single API",
   "main": "index.js",
   "public": true,
@@ -17,8 +17,7 @@
     "pre-commit-stash-save": "git stash --keep-index",
     "post-commit-stash-pop": "git stash pop"
   },
-  "pre-commit": [
-  ],
+  "pre-commit": [],
   "repository": {
     "type": "git",
     "url": "https://github.com/guyellis/multi-level-cache.git"
