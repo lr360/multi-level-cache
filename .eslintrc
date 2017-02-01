@@ -25,7 +25,7 @@
     "max-depth": 3,
     "trailing": true,
     "max-statements": 15,
-    "max-len": [2,110,4],
+    "max-len": [2,250,4],
     "eqnull": true,
     "funcscope": true,
     "undef": true,

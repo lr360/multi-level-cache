@@ -23,7 +23,7 @@ npm install multi-level-cache [--save]
 
 ```
 var MultiCache = require('multi-level-cache');
-var multiCache = new MultiCache('node-cache', 'redis');
+var multiCache = new MultiCache('node-cache', 'redis', 'redis');
 
 multiCache.set('myKey', 'myValue', function(err, result) {
   // Key/Value has been set in both the local in-memory node-cache
@@ -39,16 +39,20 @@ multiCache.get('myKey', function(err, result) {
 
 # API
 
-## `new MultiCache(localCache, remoteCache [,options])`
+## `new MultiCache(localCache, remoteCache, localCacheInvalidation [,options])`
 
 * `localCache`
   * String, such as 'node-cache', representing a cache known by the system
   to use as the local cache OR:
-  * Object/function that exposes the methods `set`, `get`, `del`
+  * Object/function that exposes the methods `set`, `get`, `del`, `flushAll`
 * `remoteCache`
   * String, such as 'redis', representing a cache known by the system
   to use as the remote cache OR:
-  * Object/function that exposes the methods `set`, `get`, `del`
+  * Object/function that exposes the methods `set`, `get`, `del`, `flushAll`
+* `localCacheInvalidation`
+  * String, such as 'redis', representing a cache known by the system
+  to use as the remote cache OR:
+  * Object/function that exposes the methods `del`, `flushAll`
 * `options`
   * `useLocalCache` - if set to a truthy value then by default the local
   cache will be active for all operations. If missing then will default
@@ -60,6 +64,8 @@ multiCache.get('myKey', function(err, result) {
   `localOptions` to an object to be used when creating the local cache.
   * `remoteOptions` - if a string is passed in for the remoteCache then set
   `remoteOptions` to an object to be used when creating the remote cache.
+  * `localCacheInvalidationOptions` - if a string is passed in for the localCacheInvalidation then set
+  `localCacheInvalidationOptions` to an object to be used when creating the local invalidation cache.
   * `ttl` - set a default ttl on call cache objects, may be overridden by
   setting the ttl during a `set` call.
 
@@ -108,6 +114,8 @@ multiCache.get('myKey', function(err, result) {
   cache use on an operation-by-operation basis.
   * `useRemoteCache` - allows the overriding of the default value for remote
   cache use on an operation-by-operation basis.
+  * `useLocalCacheInvalidation` - allows the overriding of the default value for local
+  cache invalidation use on an operation-by-operation basis.
 * `callback(error)`
   * A callback function that will be called with an `error` as the single parameter (if there is one).
 
@@ -116,6 +124,8 @@ multiCache.get('myKey', function(err, result) {
 * `options`
   * `useLocalCache` - allows the overriding of the default value for local cache use on an operation-by-operation basis.
   * `useRemoteCache` - allows the overriding of the default value for remote cache use on an operation-by-operation basis.
+  * `useLocalCacheInvalidation` - allows the overriding of the default value for local
+  cache invalidation use on an operation-by-operation basis.
 * `callback(error)`
   * A callback function that will be called with an `error` as the single parameter (if there is one).
 
