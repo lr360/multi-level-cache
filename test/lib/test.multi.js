@@ -673,7 +673,7 @@ tests.forEach(function (test) {
         this.timeout(4000);
         let multiCache = new MultiCache(localCacheName, remoteCacheName, null, {
           localOptions: { ttl_min: 1, ttl_max: 2 },
-          remoteOptions: { ttl: 1, ttl_min: 1, ttl_max: 2 }
+          remoteOptions: { ttl_min: 1, ttl_max: 2 }
         });
         multiCache.set(key, 'myValue', function (err, result) {
           assert(!err);
