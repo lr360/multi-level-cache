@@ -43,7 +43,7 @@
     "async": "^2.6.1",
     "lodash": "^4.7.11",
     "node-cache": "^4.2.0",
-    "redis": "^2.8.0"
+    "redis": "^3.0.2"
   },
   "devDependencies": {
     "debug": "4.1.0",
@@ -52,11 +52,12 @@
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-import": "^2.2.0",
     "eslint-plugin-prettier": "^2.6.0",
-    "prettier": "^1.12.1",
     "istanbul": "^0.4.5",
     "mocha": "^5.2.0",
+    "mversion": "^1.13.0",
     "npm-update-outdated": "^0.1.6",
     "pre-commit": "^1.2.2",
+    "prettier": "^1.12.1",
     "sinon": "^7.1.1"
   },
   "engines": {
